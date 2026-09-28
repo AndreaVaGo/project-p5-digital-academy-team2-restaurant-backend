@@ -58,6 +58,14 @@ public class SecurityConfiguration {
                 .requestMatchers("/error").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers(HttpMethod.POST, endpoint + "/register").permitAll()
+                /*
+                 * LECTURA PÚBLICA: la Carta, los eventos y las ofertas son páginas públicas del front,
+                 * así que cualquiera puede consultarlos (GET) sin iniciar sesión.
+                 * Crear, modificar o borrar (POST, PUT, DELETE) sigue exigiendo autenticación.
+                 */
+                .requestMatchers(HttpMethod.GET, endpoint + "/products/**").permitAll()
+                .requestMatchers(HttpMethod.GET, endpoint + "/events/**").permitAll()
+                .requestMatchers(HttpMethod.GET, endpoint + "/offers/**").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
