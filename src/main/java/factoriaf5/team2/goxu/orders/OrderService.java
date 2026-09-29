@@ -94,6 +94,8 @@ public class OrderService {
 
         if (status == OrderStatus.ON_THE_WAY) {
             notificationService.sendOrderOnTheWay(order);
+        } else if (status == OrderStatus.DELIVERED) {
+            notificationService.sendOrderDelivered(order);
         }
 
         return orderMapper.toResponse(updated);
