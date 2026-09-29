@@ -26,6 +26,7 @@ public class OrderService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final OrderMapper orderMapper;
+    private final OrderNotificationService notificationService;
 
     public List<OrderDTOResponse> getAll() {
         return orderRepository.findAll()
@@ -90,6 +91,11 @@ public class OrderService {
         OrderEntity order = findOrderOrThrow(id);
         order.setStatus(status);
         OrderEntity updated = orderRepository.save(order);
+
+        if (status == OrderStatus.ON_THE_WAY) {
+            notificationService.sendOrderOnTheWay(order);
+        }
+
         return orderMapper.toResponse(updated);
     }
 
