@@ -217,6 +217,17 @@ class OrderServiceTest {
     }
 
     @Test
+    void updateStatus_shouldSendDeliveredNotification_whenStatusChangesToDelivered() {
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(order)).thenReturn(order);
+        when(orderMapper.toResponse(order)).thenReturn(orderResponse);
+
+        orderService.updateStatus(1L, OrderStatus.DELIVERED);
+
+        verify(notificationService).sendOrderDelivered(order);
+    }
+
+    @Test
     void updateStatus_shouldChangeStatus_whenOrderExists() {
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
         when(orderRepository.save(order)).thenReturn(order);
