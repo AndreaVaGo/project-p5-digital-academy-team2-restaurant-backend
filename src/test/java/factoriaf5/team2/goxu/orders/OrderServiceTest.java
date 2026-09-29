@@ -266,4 +266,12 @@ class OrderServiceTest {
         verify(orderRepository).delete(order);
     }
 
+    @Test
+    void delete_shouldThrowNotFound_whenOrderDoesNotExist() {
+        when(orderRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> orderService.delete(99L))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Pedido no encontrado con id 99");
+    }
 }
