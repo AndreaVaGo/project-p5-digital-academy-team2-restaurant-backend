@@ -20,6 +20,11 @@ import org.springframework.security.core.Authentication;
 
 import factoriaf5.team2.goxu.auth.dtos.TokenAuthDTOResponse;
 
+import factoriaf5.team2.goxu.users.UserEntity;
+import factoriaf5.team2.goxu.users.UserRepository;
+
+import java.util.Optional;
+
 @ExtendWith(MockitoExtension.class)
 class AuthControllerTest {
 
@@ -32,7 +37,10 @@ class AuthControllerTest {
     @InjectMocks
     private AuthController authController;
 
-    @Test //Comprueba si responde correctamente 200 y si se emite el token.
+    @Mock
+    private UserRepository userRepository;
+
+    @Test // Comprueba si responde correctamente 200 y si se emite el token.
     void token_returnsOkWithGeneratedToken() {
         when(tokenService.generateToken(authentication)).thenReturn("fake.jwt.token");
 
@@ -43,7 +51,7 @@ class AuthControllerTest {
         assertEquals("fake.jwt.token", response.getBody().token());
     }
 
-    @Test //Comprueba que el controlador delega en TokenService.
+    @Test // Comprueba que el controlador delega en TokenService.
     void token_delegatesToTokenServiceOnceWithSameAuthentication() {
         when(tokenService.generateToken(authentication)).thenReturn("fake.jwt.token");
 
@@ -54,19 +62,29 @@ class AuthControllerTest {
         verifyNoMoreInteractions(tokenService);
     }
 
-    @Test//Comprueba si devuelve el email (/me)
-    void me_returnsOkWithAuthenticatedEmail() {
+@Test
+void me_returnsAuthenticatedUserData() {
 
-        when(authentication.getName()).thenReturn("juan@authentication.com");
+    UserEntity user = UserEntity.builder()
+            .id(1L)
+            .name("Juan")
+            .email("juan@authentication.com")
+            .build();
 
-        ResponseEntity<Map<String, String>> response = authController.me(authentication);
+    when(authentication.getName()).thenReturn("juan@authentication.com");
+    when(userRepository.findByEmail("juan@authentication.com"))
+            .thenReturn(Optional.of(user));
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals("juan@authentication.com", response.getBody().get("email"));
-    }
+    ResponseEntity<Map<String, Object>> response = authController.me(authentication);
 
-    @Test//Comprueba que no devuelva tokens, porque no le corresponde (/me)
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+
+    assertEquals(1L, response.getBody().get("id"));
+    assertEquals("Juan", response.getBody().get("name"));
+    assertEquals("juan@authentication.com", response.getBody().get("email"));
+}
+    @Test // Comprueba que no devuelva tokens, porque no le corresponde (/me)
     void me_doesNotIssueTokens() {
         when(authentication.getName()).thenReturn("juan@authentication.com");
 
