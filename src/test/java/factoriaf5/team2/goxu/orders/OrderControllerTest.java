@@ -66,4 +66,15 @@ class OrderControllerTest {
         assertEquals(200, response.getStatusCode().value());
         assertEquals(orders, response.getBody());
     }
+
+    @Test
+    void getOrders_returns200WithOrdersFilteredByUser_whenUserIdProvidedAndStatusIsNull() {
+        List<OrderDTOResponse> orders = List.of(buildResponse(1L, OrderStatus.PENDING));
+        when(service.getByUser(1L)).thenReturn(orders);
+
+        ResponseEntity<List<OrderDTOResponse>> response = controller.getOrders(null, 1L);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(orders, response.getBody());
+    }
 }
