@@ -103,6 +103,28 @@ class OrderServiceTest {
     }
 
     @Test
+    void getByStatus_shouldReturnOrdersFilteredByStatus() {
+        when(orderRepository.findByStatus(OrderStatus.PENDING)).thenReturn(List.of(order));
+        when(orderMapper.toResponse(order)).thenReturn(orderResponse);
+
+        List<OrderDTOResponse> result = orderService.getByStatus(OrderStatus.PENDING);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getUserName()).isEqualTo("Andrea");
+    }
+    
+    @Test
+    void getByUser_shouldReturnOrdersFilteredByUser() {
+        when(orderRepository.findByUserId(1L)).thenReturn(List.of(order));
+        when(orderMapper.toResponse(order)).thenReturn(orderResponse);
+
+        List<OrderDTOResponse> result = orderService.getByUser(1L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getUserName()).isEqualTo("Andrea");
+    }
+
+    @Test
     void getById_shouldReturnOrder_whenExists() {
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
         when(orderMapper.toResponse(order)).thenReturn(orderResponse);
@@ -192,6 +214,28 @@ class OrderServiceTest {
         assertThat(order.getStatus()).isEqualTo(OrderStatus.DELIVERED);
     }
 
+    
+    @Test
+    void updateStatus_shouldChangeStatus_whenOrderExistsAndIsDelayed() {
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(order)).thenReturn(order);
+        when(orderMapper.toResponse(order)).thenReturn(orderResponse);
+
+        OrderDTOResponse result = orderService.updateStatus(1L, OrderStatus.DELAYED);
+
+        assertThat(result).isNotNull();
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.DELAYED);
+    }
+
+    @Test
+    void updateStatus_shouldThrowNotFound_whenOrderDoesNotExist() {
+        when(orderRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> orderService.updateStatus(99L, OrderStatus.DELIVERED))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Pedido no encontrado con id 99");
+    }
+
     @Test
     void markAsPaid_shouldSetPaidTrue_whenOrderExists() {
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
@@ -205,6 +249,15 @@ class OrderServiceTest {
     }
 
     @Test
+    void markAsPaid_shouldThrowNotFound_whenOrderDoesNotExist() {
+        when(orderRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> orderService.markAsPaid(99L))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Pedido no encontrado con id 99");
+    }
+
+    @Test
     void delete_shouldRemoveOrder_whenExists() {
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
 
@@ -213,4 +266,12 @@ class OrderServiceTest {
         verify(orderRepository).delete(order);
     }
 
+    @Test
+    void delete_shouldThrowNotFound_whenOrderDoesNotExist() {
+        when(orderRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> orderService.delete(99L))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Pedido no encontrado con id 99");
+    }
 }
