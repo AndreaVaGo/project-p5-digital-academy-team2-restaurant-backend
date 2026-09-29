@@ -20,4 +20,13 @@ public class OrderNotificationService {
                 + "Tu pedido está en camino. ¡Gracias por confiar en Goxu!");
         mailSender.send(message);
     }
+
+    public void sendOrderDelivered(OrderEntity order) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(order.getUser().getEmail());
+        message.setSubject("Tu pedido #" + order.getId() + " ha sido entregado");
+        message.setText("Hola " + order.getUser().getName() + ",\n\n"
+                + "Gracias por tu compra, esperamos que lo disfrutes. Tu pedido ha sido entregado.");
+        mailSender.send(message);
+    }
 }
