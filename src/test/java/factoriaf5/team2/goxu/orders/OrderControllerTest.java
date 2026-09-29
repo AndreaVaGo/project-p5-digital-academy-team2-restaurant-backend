@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class OrderControllerTest {
@@ -121,5 +122,13 @@ class OrderControllerTest {
 
         assertEquals(200, response.getStatusCode().value());
         assertEquals(expected, response.getBody());
+    }
+
+    @Test
+    void deleteOrder_returns204_whenOrderIsDeleted() {
+        ResponseEntity<Void> response = controller.deleteOrder(1L);
+
+        assertEquals(204, response.getStatusCode().value());
+        verify(service).delete(1L);
     }
 }
