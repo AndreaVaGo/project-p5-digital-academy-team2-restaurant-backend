@@ -112,6 +112,17 @@ class OrderServiceTest {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getUserName()).isEqualTo("Andrea");
     }
+    
+    @Test
+    void getByUser_shouldReturnOrdersFilteredByUser() {
+        when(orderRepository.findByUserId(1L)).thenReturn(List.of(order));
+        when(orderMapper.toResponse(order)).thenReturn(orderResponse);
+
+        List<OrderDTOResponse> result = orderService.getByUser(1L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getUserName()).isEqualTo("Andrea");
+    }
 
     @Test
     void getById_shouldReturnOrder_whenExists() {
