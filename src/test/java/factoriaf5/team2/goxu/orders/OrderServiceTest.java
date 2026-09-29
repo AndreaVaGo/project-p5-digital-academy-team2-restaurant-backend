@@ -103,6 +103,17 @@ class OrderServiceTest {
     }
 
     @Test
+    void getByStatus_shouldReturnOrdersFilteredByStatus() {
+        when(orderRepository.findByStatus(OrderStatus.PENDING)).thenReturn(List.of(order));
+        when(orderMapper.toResponse(order)).thenReturn(orderResponse);
+
+        List<OrderDTOResponse> result = orderService.getByStatus(OrderStatus.PENDING);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getUserName()).isEqualTo("Andrea");
+    }
+
+    @Test
     void getById_shouldReturnOrder_whenExists() {
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
         when(orderMapper.toResponse(order)).thenReturn(orderResponse);
