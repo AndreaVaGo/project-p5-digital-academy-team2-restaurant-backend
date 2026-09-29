@@ -77,4 +77,15 @@ class OrderControllerTest {
         assertEquals(200, response.getStatusCode().value());
         assertEquals(orders, response.getBody());
     }
+
+    @Test
+    void getOrderById_returns200WithOrder_whenOrderExists() {
+        OrderDTOResponse expected = buildResponse(1L, OrderStatus.PENDING);
+        when(service.getById(1L)).thenReturn(expected);
+
+        ResponseEntity<OrderDTOResponse> response = controller.getOrderById(1L);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(expected, response.getBody());
+    }
 }
