@@ -111,4 +111,15 @@ class OrderControllerTest {
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(expected, response.getBody());
     }
+
+    @Test
+    void markAsPaid_returns200WithPaidOrder_whenOrderExists() {
+        OrderDTOResponse expected = buildResponse(1L, OrderStatus.PENDING);
+        when(service.markAsPaid(1L)).thenReturn(expected);
+
+        ResponseEntity<OrderDTOResponse> response = controller.markAsPaid(1L);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(expected, response.getBody());
+    }
 }
