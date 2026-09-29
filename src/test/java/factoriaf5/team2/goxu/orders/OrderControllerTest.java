@@ -45,13 +45,23 @@ class OrderControllerTest {
         assertEquals(expected, response.getBody());
     }
 
-    /* GET sin parámetros: responde 200 con todos los pedidos */
     @Test
     void getOrders_returns200WithAllOrders_whenNoParamsProvided() {
         List<OrderDTOResponse> orders = List.of(buildResponse(1L, OrderStatus.PENDING));
         when(service.getAll()).thenReturn(orders);
 
         ResponseEntity<List<OrderDTOResponse>> response = controller.getOrders(null, null);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(orders, response.getBody());
+    }
+
+    @Test
+    void getOrders_returns200WithOrdersFilteredByStatus_whenStatusProvided() {
+        List<OrderDTOResponse> orders = List.of(buildResponse(1L, OrderStatus.PENDING));
+        when(service.getByStatus(OrderStatus.PENDING)).thenReturn(orders);
+
+        ResponseEntity<List<OrderDTOResponse>> response = controller.getOrders(OrderStatus.PENDING, null);
 
         assertEquals(200, response.getStatusCode().value());
         assertEquals(orders, response.getBody());
