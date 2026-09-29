@@ -43,6 +43,9 @@ class OrderServiceTest {
     @Mock
     private OrderMapper orderMapper;
 
+    @Mock
+    private OrderNotificationService notificationService;
+
     @InjectMocks
     private OrderService orderService;
 
@@ -203,6 +206,17 @@ class OrderServiceTest {
     }
 
     @Test
+    void updateStatus_shouldSendOnTheWayNotification_whenStatusChangesToOnTheWay() {
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(order)).thenReturn(order);
+        when(orderMapper.toResponse(order)).thenReturn(orderResponse);
+
+        orderService.updateStatus(1L, OrderStatus.ON_THE_WAY);
+
+        verify(notificationService).sendOrderOnTheWay(order);
+    }
+
+    @Test
     void updateStatus_shouldChangeStatus_whenOrderExists() {
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
         when(orderRepository.save(order)).thenReturn(order);
@@ -214,7 +228,6 @@ class OrderServiceTest {
         assertThat(order.getStatus()).isEqualTo(OrderStatus.DELIVERED);
     }
 
-    
     @Test
     void updateStatus_shouldChangeStatus_whenOrderExistsAndIsDelayed() {
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
