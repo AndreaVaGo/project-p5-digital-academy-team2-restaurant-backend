@@ -57,4 +57,18 @@ class OrderNotificationServiceTest {
         assertThat(message.getSubject()).contains("en camino");
         assertThat(message.getText()).contains("Andrea");
     }
+
+    @Test
+    void sendOrderDelivered_shouldSendEmailWithCorrectRecipientAndContent() {
+        ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+
+        notificationService.sendOrderDelivered(order);
+
+        verify(mailSender).send(captor.capture());
+        SimpleMailMessage message = captor.getValue();
+        assertThat(message.getTo()).containsExactly("andrea@example.com");
+        assertThat(message.getSubject()).contains("entregado");
+        assertThat(message.getText()).contains("Andrea");
+        assertThat(message.getText()).contains("Gracias");
+    }
 }
