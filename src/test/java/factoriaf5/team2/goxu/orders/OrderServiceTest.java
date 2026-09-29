@@ -249,6 +249,15 @@ class OrderServiceTest {
     }
 
     @Test
+    void markAsPaid_shouldThrowNotFound_whenOrderDoesNotExist() {
+        when(orderRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> orderService.markAsPaid(99L))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Pedido no encontrado con id 99");
+    }
+
+    @Test
     void delete_shouldRemoveOrder_whenExists() {
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
 
