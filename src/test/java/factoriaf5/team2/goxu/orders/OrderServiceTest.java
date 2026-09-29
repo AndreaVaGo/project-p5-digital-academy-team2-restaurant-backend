@@ -192,6 +192,19 @@ class OrderServiceTest {
         assertThat(order.getStatus()).isEqualTo(OrderStatus.DELIVERED);
     }
 
+    
+    @Test
+    void updateStatus_shouldChangeStatus_whenOrderExistsAndIsDelayed() {
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(order)).thenReturn(order);
+        when(orderMapper.toResponse(order)).thenReturn(orderResponse);
+
+        OrderDTOResponse result = orderService.updateStatus(1L, OrderStatus.DELAYED);
+
+        assertThat(result).isNotNull();
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.DELAYED);
+    }
+
     @Test
     void markAsPaid_shouldSetPaidTrue_whenOrderExists() {
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
