@@ -11,6 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 import factoriaf5.team2.goxu.orders.dtos.OrderDTORequest;
 import factoriaf5.team2.goxu.orders.dtos.OrderDTOResponse;
 import factoriaf5.team2.goxu.orders.dtos.OrderItemDTORequest;
+import factoriaf5.team2.goxu.orders.dtos.OrderStatusHistoryDTOResponse;
 import factoriaf5.team2.goxu.products.ProductEntity;
 import factoriaf5.team2.goxu.products.ProductRepository;
 import factoriaf5.team2.goxu.users.UserEntity;
@@ -26,6 +27,8 @@ public class OrderService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final OrderMapper orderMapper;
+    private final OrderNotificationService notificationService;
+    private final OrderStatusHistoryRepository historyRepository;
 
     public List<OrderDTOResponse> getAll() {
         return orderRepository.findAll()
@@ -51,6 +54,14 @@ public class OrderService {
     public OrderDTOResponse getById(Long id) {
         OrderEntity order = findOrderOrThrow(id);
         return orderMapper.toResponse(order);
+    }
+
+    public List<OrderStatusHistoryDTOResponse> getTracking(Long id) {
+        OrderEntity order = findOrderOrThrow(id);
+        return historyRepository.findByOrderIdOrderByChangedAtAsc(order.getId())
+                .stream()
+                .map(orderMapper::toResponse)
+                .toList();
     }
 
     public OrderDTOResponse create(OrderDTORequest request) {
@@ -90,6 +101,19 @@ public class OrderService {
         OrderEntity order = findOrderOrThrow(id);
         order.setStatus(status);
         OrderEntity updated = orderRepository.save(order);
+
+        historyRepository.save(OrderStatusHistoryEntity.builder()
+                .order(order)
+                .status(status)
+                .changedAt(LocalDateTime.now())
+                .build());
+
+        if (status == OrderStatus.ON_THE_WAY) {
+            notificationService.sendOrderOnTheWay(order);
+        } else if (status == OrderStatus.DELIVERED) {
+            notificationService.sendOrderDelivered(order);
+        }
+
         return orderMapper.toResponse(updated);
     }
 

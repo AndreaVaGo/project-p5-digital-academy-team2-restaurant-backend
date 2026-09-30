@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import factoriaf5.team2.goxu.orders.dtos.OrderDTOResponse;
 import factoriaf5.team2.goxu.orders.dtos.OrderItemDTORequest;
 import factoriaf5.team2.goxu.orders.dtos.OrderItemDTOResponse;
+import factoriaf5.team2.goxu.orders.dtos.OrderStatusHistoryDTOResponse;
 import factoriaf5.team2.goxu.products.ProductEntity;
 import factoriaf5.team2.goxu.users.UserEntity;
 
@@ -98,6 +99,21 @@ class OrderMapperTest {
         assertThat(result.getTotal()).isEqualTo(new BigDecimal("32.00"));
         assertThat(result.getItems()).hasSize(1);
         assertThat(result.getItems().get(0).getProductName()).isEqualTo("Fabada Asturiana");
+    }
+
+    @Test
+    void toResponse_shouldMapOrderStatusHistoryEntityFieldsToDTOResponse() {
+        LocalDateTime changedAt = LocalDateTime.of(2026, 9, 30, 12, 0);
+
+        OrderStatusHistoryEntity entity = OrderStatusHistoryEntity.builder()
+                .status(OrderStatus.ON_THE_WAY)
+                .changedAt(changedAt)
+                .build();
+
+        OrderStatusHistoryDTOResponse result = orderMapper.toResponse(entity);
+
+        assertThat(result.getStatus()).isEqualTo(OrderStatus.ON_THE_WAY);
+        assertThat(result.getChangedAt()).isEqualTo(changedAt);
     }
 
 }

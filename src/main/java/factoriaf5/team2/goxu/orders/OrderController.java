@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import factoriaf5.team2.goxu.orders.dtos.OrderDTORequest;
 import factoriaf5.team2.goxu.orders.dtos.OrderDTOResponse;
+import factoriaf5.team2.goxu.orders.dtos.OrderStatusHistoryDTOResponse;
 
 import jakarta.validation.Valid;
 
@@ -48,6 +49,11 @@ public class OrderController {
     @GetMapping("/{id}")
     public ResponseEntity<OrderDTOResponse> getOrderById(@PathVariable Long id) {
         return ResponseEntity.ok(service.getById(id));
+    }
+
+    @GetMapping("/{id}/tracking")
+    public ResponseEntity<List<OrderStatusHistoryDTOResponse>> getTracking(@PathVariable Long id) {
+        return ResponseEntity.ok(service.getTracking(id));
     }
 
     @PostMapping("")
