@@ -2,6 +2,7 @@ package factoriaf5.team2.goxu.products;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -33,48 +34,33 @@ class ProductServiceTest {
     private ProductService productService;
 
     private ProductEntity product;
-    private ProductDTORequest request;
-    private ProductDTOResponse response;
+    private ProductDTOResponse productResponse;
 
     @BeforeEach
     void setUp() {
         product = ProductEntity.builder()
                 .id(1L)
                 .name("Fabada Asturiana")
-                .description("Plato tradicional asturiano")
-                .price(new BigDecimal("14.50"))
-                .image("fabada.jpg")
-                .category("Platos principales")
+                .description("La receta de siempre.")
+                .price(new BigDecimal("16.00"))
+                .image("/menu-img/fabada.png")
+                .category("Especialidades")
                 .available(true)
                 .featured(true)
                 .build();
 
-        request = ProductDTORequest.builder()
-                .name("Fabada Asturiana")
-                .description("Plato tradicional asturiano")
-                .price(new BigDecimal("14.50"))
-                .image("fabada.jpg")
-                .category("Platos principales")
-                .available(true)
-                .featured(true)
-                .build();
-
-        response = ProductDTOResponse.builder()
+        productResponse = ProductDTOResponse.builder()
                 .id(1L)
                 .name("Fabada Asturiana")
-                .description("Plato tradicional asturiano")
-                .price(new BigDecimal("14.50"))
-                .image("fabada.jpg")
-                .category("Platos principales")
-                .available(true)
-                .featured(true)
+                .category("Especialidades")
+                .price(new BigDecimal("16.00"))
                 .build();
     }
 
     @Test
     void getAll_shouldReturnAllProductsMapped() {
         when(productRepository.findAll()).thenReturn(List.of(product));
-        when(productMapper.toResponse(product)).thenReturn(response);
+        when(productMapper.toResponse(product)).thenReturn(productResponse);
 
         List<ProductDTOResponse> result = productService.getAll();
 
@@ -83,9 +69,31 @@ class ProductServiceTest {
     }
 
     @Test
+    void getFeatured_shouldReturnOnlyFeaturedProducts() {
+        when(productRepository.findByFeaturedTrue()).thenReturn(List.of(product));
+        when(productMapper.toResponse(product)).thenReturn(productResponse);
+
+        List<ProductDTOResponse> result = productService.getFeatured();
+
+        assertThat(result).hasSize(1);
+        verify(productRepository).findByFeaturedTrue();
+    }
+
+    @Test
+    void getByCategory_shouldReturnProductsInThatCategory() {
+        when(productRepository.findByCategory("Especialidades")).thenReturn(List.of(product));
+        when(productMapper.toResponse(product)).thenReturn(productResponse);
+
+        List<ProductDTOResponse> result = productService.getByCategory("Especialidades");
+
+        assertThat(result).hasSize(1);
+        verify(productRepository).findByCategory("Especialidades");
+    }
+
+    @Test
     void getById_shouldReturnProduct_whenExists() {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-        when(productMapper.toResponse(product)).thenReturn(response);
+        when(productMapper.toResponse(product)).thenReturn(productResponse);
 
         ProductDTOResponse result = productService.getById(1L);
 
@@ -103,14 +111,56 @@ class ProductServiceTest {
 
     @Test
     void create_shouldSaveAndReturnMappedProduct() {
+        ProductDTORequest request = ProductDTORequest.builder()
+                .name("Fabada Asturiana")
+                .description("La receta de siempre.")
+                .price(new BigDecimal("16.00"))
+                .image("/menu-img/fabada.png")
+                .category("Especialidades")
+                .build();
+
         when(productMapper.toEntity(request)).thenReturn(product);
         when(productRepository.save(product)).thenReturn(product);
-        when(productMapper.toResponse(product)).thenReturn(response);
+        when(productMapper.toResponse(product)).thenReturn(productResponse);
 
         ProductDTOResponse result = productService.create(request);
 
-        assertThat(result.getName()).isEqualTo("Fabada Asturiana");
+        assertThat(result).isNotNull();
         verify(productRepository).save(product);
+    }
+
+    @Test
+    void update_shouldModifyAndSaveProduct_whenExists() {
+        ProductDTORequest request = ProductDTORequest.builder()
+                .name("Fabada Actualizada")
+                .description("Nueva descripción.")
+                .price(new BigDecimal("17.00"))
+                .image("/menu-img/fabada2.png")
+                .category("Especialidades")
+                .available(true)
+                .featured(false)
+                .build();
+
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(productRepository.save(any(ProductEntity.class))).thenReturn(product);
+        when(productMapper.toResponse(product)).thenReturn(productResponse);
+
+        ProductDTOResponse result = productService.update(1L, request);
+
+        assertThat(result).isNotNull();
+        assertThat(product.getName()).isEqualTo("Fabada Actualizada");
+        assertThat(product.getPrice()).isEqualTo(new BigDecimal("17.00"));
+    }
+
+    @Test
+    void update_shouldThrowNotFound_whenProductDoesNotExist() {
+        ProductDTORequest request = ProductDTORequest.builder().name("X").build();
+
+        when(productRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> productService.update(99L, request))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Producto no encontrado con id 99");
     }
 
     @Test
@@ -127,6 +177,8 @@ class ProductServiceTest {
         when(productRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> productService.delete(99L))
-                .isInstanceOf(ResponseStatusException.class);
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Producto no encontrado con id 99");
     }
+
 }
