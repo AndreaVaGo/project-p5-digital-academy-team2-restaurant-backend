@@ -14,6 +14,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -45,6 +46,9 @@ class OrderServiceTest {
 
     @Mock
     private OrderNotificationService notificationService;
+
+    @Mock
+    private OrderStatusHistoryRepository historyRepository;
 
     @InjectMocks
     private OrderService orderService;
@@ -225,6 +229,23 @@ class OrderServiceTest {
         orderService.updateStatus(1L, OrderStatus.DELIVERED);
 
         verify(notificationService).sendOrderDelivered(order);
+    }
+
+    @Test
+    void updateStatus_shouldSaveStatusHistoryEntry_wheneverStatusChanges() {
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(order)).thenReturn(order);
+        when(orderMapper.toResponse(order)).thenReturn(orderResponse);
+
+        orderService.updateStatus(1L, OrderStatus.IN_KITCHEN);
+
+        ArgumentCaptor<OrderStatusHistoryEntity> captor = ArgumentCaptor.forClass(OrderStatusHistoryEntity.class);
+        verify(historyRepository).save(captor.capture());
+
+        OrderStatusHistoryEntity savedHistory = captor.getValue();
+        assertThat(savedHistory.getOrder()).isEqualTo(order);
+        assertThat(savedHistory.getStatus()).isEqualTo(OrderStatus.IN_KITCHEN);
+        assertThat(savedHistory.getChangedAt()).isNotNull();
     }
 
     @Test
