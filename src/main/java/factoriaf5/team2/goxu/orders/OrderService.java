@@ -27,6 +27,7 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final OrderMapper orderMapper;
     private final OrderNotificationService notificationService;
+    private final OrderStatusHistoryRepository historyRepository;
 
     public List<OrderDTOResponse> getAll() {
         return orderRepository.findAll()
@@ -91,6 +92,12 @@ public class OrderService {
         OrderEntity order = findOrderOrThrow(id);
         order.setStatus(status);
         OrderEntity updated = orderRepository.save(order);
+
+        historyRepository.save(OrderStatusHistoryEntity.builder()
+                .order(order)
+                .status(status)
+                .changedAt(LocalDateTime.now())
+                .build());
 
         if (status == OrderStatus.ON_THE_WAY) {
             notificationService.sendOrderOnTheWay(order);
