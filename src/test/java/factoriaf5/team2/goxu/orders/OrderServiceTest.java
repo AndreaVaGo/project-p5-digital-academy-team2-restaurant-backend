@@ -175,6 +175,15 @@ class OrderServiceTest {
     }
 
     @Test
+    void getTracking_shouldThrowNotFound_whenOrderDoesNotExist() {
+        when(orderRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> orderService.getTracking(99L))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Pedido no encontrado con id 99");
+    }
+
+    @Test
     void create_shouldSaveOrderWithCalculatedTotal() {
         OrderItemDTORequest itemRequest = OrderItemDTORequest.builder()
                 .productId(1L)
