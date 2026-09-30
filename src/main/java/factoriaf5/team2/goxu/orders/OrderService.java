@@ -11,6 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 import factoriaf5.team2.goxu.orders.dtos.OrderDTORequest;
 import factoriaf5.team2.goxu.orders.dtos.OrderDTOResponse;
 import factoriaf5.team2.goxu.orders.dtos.OrderItemDTORequest;
+import factoriaf5.team2.goxu.orders.dtos.OrderStatusHistoryDTOResponse;
 import factoriaf5.team2.goxu.products.ProductEntity;
 import factoriaf5.team2.goxu.products.ProductRepository;
 import factoriaf5.team2.goxu.users.UserEntity;
@@ -53,6 +54,14 @@ public class OrderService {
     public OrderDTOResponse getById(Long id) {
         OrderEntity order = findOrderOrThrow(id);
         return orderMapper.toResponse(order);
+    }
+
+    public List<OrderStatusHistoryDTOResponse> getTracking(Long id) {
+        OrderEntity order = findOrderOrThrow(id);
+        return historyRepository.findByOrderIdOrderByChangedAtAsc(order.getId())
+                .stream()
+                .map(orderMapper::toResponse)
+                .toList();
     }
 
     public OrderDTOResponse create(OrderDTORequest request) {
