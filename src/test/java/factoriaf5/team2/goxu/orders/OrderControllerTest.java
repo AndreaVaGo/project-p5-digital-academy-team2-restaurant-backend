@@ -1,129 +1,134 @@
 package factoriaf5.team2.goxu.orders;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import factoriaf5.team2.goxu.orders.dtos.OrderDTORequest;
+import factoriaf5.team2.goxu.orders.dtos.OrderDTOResponse;
+import factoriaf5.team2.goxu.orders.dtos.OrderItemDTORequest;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import factoriaf5.team2.goxu.orders.dtos.OrderDTORequest;
-import factoriaf5.team2.goxu.orders.dtos.OrderDTOResponse;
-import factoriaf5.team2.goxu.orders.dtos.OrderItemDTORequest;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
 class OrderControllerTest {
 
-    @Mock
     private OrderService service;
-
-    @InjectMocks
     private OrderController controller;
-
-    private OrderDTOResponse response;
 
     @BeforeEach
     void setUp() {
-        response = OrderDTOResponse.builder()
-                .id(1L)
+        service = mock(OrderService.class);
+        controller = new OrderController(service);
+    }
+
+    private OrderDTOResponse buildResponse(Long id, OrderStatus status) {
+        return OrderDTOResponse.builder()
+                .id(id)
                 .userId(1L)
                 .userName("Andrea")
-                .status(OrderStatus.PENDING)
-                .total(new BigDecimal("51.50"))
+                .status(status)
+                .total(new BigDecimal("14.50"))
                 .build();
     }
 
     @Test
-    void getOrders_shouldReturnByStatus_whenStatusGiven() {
-        when(service.getByStatus(OrderStatus.ON_THE_WAY)).thenReturn(List.of(response));
+    void updateStatus_returns200WithUpdatedOrder_whenStatusIsDelayed() {
+        OrderDTOResponse expected = buildResponse(1L, OrderStatus.DELAYED);
+        when(service.updateStatus(1L, OrderStatus.DELAYED)).thenReturn(expected);
 
-        ResponseEntity<List<OrderDTOResponse>> result = controller.getOrders(OrderStatus.ON_THE_WAY, null);
+        ResponseEntity<OrderDTOResponse> response = controller.updateStatus(1L, OrderStatus.DELAYED);
 
-        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(result.getBody()).containsExactly(response);
-        verify(service).getByStatus(OrderStatus.ON_THE_WAY);
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(expected, response.getBody());
     }
 
     @Test
-    void getOrders_shouldReturnByUser_whenUserIdGiven() {
-        when(service.getByUser(1L)).thenReturn(List.of(response));
+    void getOrders_returns200WithAllOrders_whenNoParamsProvided() {
+        List<OrderDTOResponse> orders = List.of(buildResponse(1L, OrderStatus.PENDING));
+        when(service.getAll()).thenReturn(orders);
 
-        ResponseEntity<List<OrderDTOResponse>> result = controller.getOrders(null, 1L);
+        ResponseEntity<List<OrderDTOResponse>> response = controller.getOrders(null, null);
 
-        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(result.getBody()).containsExactly(response);
-        verify(service).getByUser(1L);
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(orders, response.getBody());
     }
 
     @Test
-    void getOrders_shouldReturnAll_whenNoFiltersGiven() {
-        when(service.getAll()).thenReturn(List.of(response));
+    void getOrders_returns200WithOrdersFilteredByStatus_whenStatusProvided() {
+        List<OrderDTOResponse> orders = List.of(buildResponse(1L, OrderStatus.PENDING));
+        when(service.getByStatus(OrderStatus.PENDING)).thenReturn(orders);
 
-        ResponseEntity<List<OrderDTOResponse>> result = controller.getOrders(null, null);
+        ResponseEntity<List<OrderDTOResponse>> response = controller.getOrders(OrderStatus.PENDING, null);
 
-        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(result.getBody()).containsExactly(response);
-        verify(service).getAll();
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(orders, response.getBody());
     }
 
     @Test
-    void getOrderById_shouldReturnOrderFromService() {
-        when(service.getById(1L)).thenReturn(response);
+    void getOrders_returns200WithOrdersFilteredByUser_whenUserIdProvidedAndStatusIsNull() {
+        List<OrderDTOResponse> orders = List.of(buildResponse(1L, OrderStatus.PENDING));
+        when(service.getByUser(1L)).thenReturn(orders);
 
-        ResponseEntity<OrderDTOResponse> result = controller.getOrderById(1L);
+        ResponseEntity<List<OrderDTOResponse>> response = controller.getOrders(null, 1L);
 
-        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(result.getBody()).isEqualTo(response);
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(orders, response.getBody());
     }
 
     @Test
-    void createOrder_shouldReturnCreatedStatus() {
-        OrderItemDTORequest item = OrderItemDTORequest.builder().productId(1L).quantity(2).build();
-        OrderDTORequest request = OrderDTORequest.builder().userId(1L).items(List.of(item)).build();
+    void getOrderById_returns200WithOrder_whenOrderExists() {
+        OrderDTOResponse expected = buildResponse(1L, OrderStatus.PENDING);
+        when(service.getById(1L)).thenReturn(expected);
 
-        when(service.create(request)).thenReturn(response);
+        ResponseEntity<OrderDTOResponse> response = controller.getOrderById(1L);
 
-        ResponseEntity<OrderDTOResponse> result = controller.createOrder(request);
-
-        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        assertThat(result.getBody()).isEqualTo(response);
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(expected, response.getBody());
     }
 
     @Test
-    void updateStatus_shouldReturnUpdatedOrder() {
-        when(service.updateStatus(1L, OrderStatus.ON_THE_WAY)).thenReturn(response);
+    void createOrder_returns201WithCreatedOrder_whenRequestIsValid() {
+        OrderItemDTORequest item = OrderItemDTORequest.builder()
+                .productId(1L)
+                .quantity(2)
+                .build();
+        OrderDTORequest request = OrderDTORequest.builder()
+                .userId(1L)
+                .tableNumber("5")
+                .items(List.of(item))
+                .build();
+        OrderDTOResponse expected = buildResponse(1L, OrderStatus.PENDING);
+        when(service.create(request)).thenReturn(expected);
 
-        ResponseEntity<OrderDTOResponse> result = controller.updateStatus(1L, OrderStatus.ON_THE_WAY);
+        ResponseEntity<OrderDTOResponse> response = controller.createOrder(request);
 
-        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(result.getBody()).isEqualTo(response);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals(expected, response.getBody());
     }
 
     @Test
-    void markAsPaid_shouldReturnUpdatedOrder() {
-        when(service.markAsPaid(1L)).thenReturn(response);
+    void markAsPaid_returns200WithPaidOrder_whenOrderExists() {
+        OrderDTOResponse expected = buildResponse(1L, OrderStatus.PENDING);
+        when(service.markAsPaid(1L)).thenReturn(expected);
 
-        ResponseEntity<OrderDTOResponse> result = controller.markAsPaid(1L);
+        ResponseEntity<OrderDTOResponse> response = controller.markAsPaid(1L);
 
-        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(result.getBody()).isEqualTo(response);
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(expected, response.getBody());
     }
 
     @Test
-    void deleteOrder_shouldReturnNoContent() {
-        ResponseEntity<Void> result = controller.deleteOrder(1L);
+    void deleteOrder_returns204_whenOrderIsDeleted() {
+        ResponseEntity<Void> response = controller.deleteOrder(1L);
 
-        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        assertEquals(204, response.getStatusCode().value());
         verify(service).delete(1L);
     }
-
 }
