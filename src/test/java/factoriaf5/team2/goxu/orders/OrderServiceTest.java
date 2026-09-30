@@ -24,6 +24,7 @@ import factoriaf5.team2.goxu.orders.dtos.OrderDTORequest;
 import factoriaf5.team2.goxu.orders.dtos.OrderDTOResponse;
 import factoriaf5.team2.goxu.orders.dtos.OrderItemDTORequest;
 import factoriaf5.team2.goxu.orders.dtos.OrderItemDTOResponse;
+import factoriaf5.team2.goxu.orders.dtos.OrderStatusHistoryDTOResponse;
 import factoriaf5.team2.goxu.products.ProductEntity;
 import factoriaf5.team2.goxu.products.ProductRepository;
 import factoriaf5.team2.goxu.users.UserEntity;
@@ -148,6 +149,29 @@ class OrderServiceTest {
         assertThatThrownBy(() -> orderService.getById(99L))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Pedido no encontrado con id 99");
+    }
+    
+    @Test
+    void getTracking_shouldReturnHistoryOrderedByChangedAt_whenOrderExists() {
+        OrderStatusHistoryEntity historyEntry = OrderStatusHistoryEntity.builder()
+                .order(order)
+                .status(OrderStatus.IN_KITCHEN)
+                .changedAt(LocalDateTime.now())
+                .build();
+
+        OrderStatusHistoryDTOResponse historyResponse = OrderStatusHistoryDTOResponse.builder()
+                .status(OrderStatus.IN_KITCHEN)
+                .changedAt(historyEntry.getChangedAt())
+                .build();
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(historyRepository.findByOrderIdOrderByChangedAtAsc(1L)).thenReturn(List.of(historyEntry));
+        when(orderMapper.toResponse(historyEntry)).thenReturn(historyResponse);
+
+        List<OrderStatusHistoryDTOResponse> result = orderService.getTracking(1L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getStatus()).isEqualTo(OrderStatus.IN_KITCHEN);
     }
 
     @Test
