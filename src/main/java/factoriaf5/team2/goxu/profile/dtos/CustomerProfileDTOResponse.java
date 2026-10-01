@@ -22,9 +22,16 @@ public class CustomerProfileDTOResponse {
     private Long userId;
     private String name;
     private String email;
+
+    private String surname;
+    private String phone;
+    private String address;
+    private String postalCode;
+    private String city;
+    private String avatar;
+
     private long totalOrders;
     private BigDecimal totalSpent;
     private List<TopProductDTO> favoriteProducts;
     private List<OrderDTOResponse> recentOrders;
-
 }
