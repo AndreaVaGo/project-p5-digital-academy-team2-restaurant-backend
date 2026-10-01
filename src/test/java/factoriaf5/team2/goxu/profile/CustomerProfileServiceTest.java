@@ -132,8 +132,15 @@ class CustomerProfileServiceTest {
 
         @Test
         void updateProfile_shouldUpdatePersonalData() {
+                UserEntity user = UserEntity.builder()
+                                .id(1L)
+                                .name("Cliente Test")
+                                .email("cliente@test.com")
+                                .build();
+
                 CustomerProfileEntity profile = CustomerProfileEntity.builder()
                                 .id(1L)
+                                .user(user)
                                 .surname("García")
                                 .phone("600123456")
                                 .address("Calle Uría 45")
@@ -158,12 +165,16 @@ class CustomerProfileServiceTest {
 
                 CustomerProfileDTOResponse result = customerProfileService.updateProfile(1L, request);
 
+                assertThat(result.getUserId()).isEqualTo(1L);
+                assertThat(result.getName()).isEqualTo("Cliente Test");
+                assertThat(result.getEmail()).isEqualTo("cliente@test.com");
                 assertThat(result.getSurname()).isEqualTo("López");
                 assertThat(result.getPhone()).isEqualTo("611987654");
                 assertThat(result.getAddress()).isEqualTo("Calle Corrida 10");
                 assertThat(result.getPostalCode()).isEqualTo("33206");
                 assertThat(result.getCity()).isEqualTo("Gijón");
-                assertThat(result.getAvatar()).isEqualTo("https://example.com/new-avatar.jpg");
+                assertThat(result.getAvatar())
+                                .isEqualTo("https://example.com/new-avatar.jpg");
 
                 verify(customerProfileRepository).save(profile);
         }
