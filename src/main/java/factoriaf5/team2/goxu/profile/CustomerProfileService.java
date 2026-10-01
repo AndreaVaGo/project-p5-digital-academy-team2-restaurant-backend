@@ -43,6 +43,12 @@ public class CustomerProfileService {
                                 .orElseThrow(() -> new ResponseStatusException(
                                                 HttpStatus.NOT_FOUND, "Usuario no encontrado con id " + userId));
 
+                CustomerProfileEntity profile = customerProfileRepository
+                                .findByUserId(userId)
+                                .orElseThrow(() -> new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND,
+                                                "Perfil no encontrado"));
+
                 List<OrderEntity> orders = orderRepository.findByUserId(userId);
 
                 BigDecimal totalSpent = orders.stream()
@@ -67,6 +73,12 @@ public class CustomerProfileService {
                                 .totalSpent(totalSpent)
                                 .favoriteProducts(favoriteProducts)
                                 .recentOrders(recentOrders)
+                                .surname(profile.getSurname())
+                                .phone(profile.getPhone())
+                                .address(profile.getAddress())
+                                .postalCode(profile.getPostalCode())
+                                .city(profile.getCity())
+                                .avatar(profile.getAvatar())
                                 .build();
         }
 
