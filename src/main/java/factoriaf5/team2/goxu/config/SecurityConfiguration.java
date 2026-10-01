@@ -59,6 +59,12 @@ public class SecurityConfiguration {
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers(HttpMethod.POST, endpoint + "/register").permitAll()
                 /*
+                 * FORMULARIO DE CONTACTO: el formulario "¿Hablamos?" está en la Home, a la vista
+                 * de cualquier visitante, así que enviar un mensaje (POST) no exige iniciar sesión.
+                 * Consultar los mensajes (GET) sigue siendo solo para usuarios autenticados.
+                 */
+                .requestMatchers(HttpMethod.POST, endpoint + "/contact-messages").permitAll()
+                /*
                  * LECTURA PÚBLICA: la Carta, los eventos y las ofertas son páginas públicas del front,
                  * así que cualquiera puede consultarlos (GET) sin iniciar sesión.
                  * Crear, modificar o borrar (POST, PUT, DELETE) sigue exigiendo autenticación.
