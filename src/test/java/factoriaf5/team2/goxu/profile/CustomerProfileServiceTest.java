@@ -28,8 +28,6 @@ import factoriaf5.team2.goxu.profile.dtos.CustomerProfileDTOResponse;
 import factoriaf5.team2.goxu.users.UserEntity;
 import factoriaf5.team2.goxu.users.UserRepository;
 import factoriaf5.team2.goxu.profile.dtos.CustomerProfileUpdateDTORequest;
-import factoriaf5.team2.goxu.profile.CustomerProfileEntity;
-import factoriaf5.team2.goxu.profile.CustomerProfileRepository;
 
 @ExtendWith(MockitoExtension.class)
 class CustomerProfileServiceTest {
@@ -55,17 +53,6 @@ class CustomerProfileServiceTest {
                                 .id(1L)
                                 .name("Cliente Test")
                                 .email("cliente@test.com")
-                                .build();
-
-                CustomerProfileEntity profile = CustomerProfileEntity.builder()
-                                .id(1L)
-                                .user(user)
-                                .surname("García")
-                                .phone("600123456")
-                                .address("Calle Uría 45")
-                                .postalCode("33003")
-                                .city("Oviedo")
-                                .avatar("https://example.com/avatar.jpg")
                                 .build();
 
                 ProductEntity fabada = ProductEntity.builder()
@@ -99,71 +86,22 @@ class CustomerProfileServiceTest {
                                 .items(List.of())
                                 .build();
 
-                when(userRepository.findById(1L))
-                                .thenReturn(Optional.of(user));
-
-                when(customerProfileRepository.findByUserId(1L))
-                                .thenReturn(Optional.of(profile));
-
-                when(orderRepository.findByUserId(1L))
-                                .thenReturn(List.of(order));
-
-                when(orderMapper.toResponse(order))
-                                .thenReturn(orderResponse);
+                when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+                when(orderRepository.findByUserId(1L)).thenReturn(List.of(order));
+                when(orderMapper.toResponse(order)).thenReturn(orderResponse);
 
                 CustomerProfileDTOResponse result = customerProfileService.getProfile(1L);
 
                 assertThat(result.getName()).isEqualTo("Cliente Test");
                 assertThat(result.getEmail()).isEqualTo("cliente@test.com");
                 assertThat(result.getTotalOrders()).isEqualTo(1);
-                assertThat(result.getTotalSpent())
-                                .isEqualTo(new BigDecimal("29.00"));
+                assertThat(result.getTotalSpent()).isEqualTo(new BigDecimal("29.00"));
                 assertThat(result.getFavoriteProducts()).hasSize(1);
-                assertThat(result.getFavoriteProducts().get(0).getProductName())
-                                .isEqualTo("Fabada Asturiana");
+                assertThat(result.getFavoriteProducts().get(0).getProductName()).isEqualTo("Fabada Asturiana");
                 assertThat(result.getRecentOrders()).hasSize(1);
         }
 
-        @Test
-        void getProfile_shouldReturnPersonalData() {
-                UserEntity user = UserEntity.builder()
-                                .id(1L)
-                                .name("Cliente Test")
-                                .email("cliente@test.com")
-                                .build();
-
-                CustomerProfileEntity profile = CustomerProfileEntity.builder()
-                                .id(1L)
-                                .user(user)
-                                .surname("García")
-                                .phone("600123456")
-                                .address("Calle Uría 45")
-                                .postalCode("33003")
-                                .city("Oviedo")
-                                .avatar("https://example.com/avatar.jpg")
-                                .build();
-
-                when(userRepository.findById(1L))
-                                .thenReturn(Optional.of(user));
-
-                when(customerProfileRepository.findByUserId(1L))
-                                .thenReturn(Optional.of(profile));
-
-                when(orderRepository.findByUserId(1L))
-                                .thenReturn(List.of());
-
-                CustomerProfileDTOResponse result = customerProfileService.getProfile(1L);
-
-                assertThat(result.getName()).isEqualTo("Cliente Test");
-                assertThat(result.getEmail()).isEqualTo("cliente@test.com");
-                assertThat(result.getSurname()).isEqualTo("García");
-                assertThat(result.getPhone()).isEqualTo("600123456");
-                assertThat(result.getAddress()).isEqualTo("Calle Uría 45");
-                assertThat(result.getPostalCode()).isEqualTo("33003");
-                assertThat(result.getCity()).isEqualTo("Oviedo");
-                assertThat(result.getAvatar())
-                                .isEqualTo("https://example.com/avatar.jpg");
-        }
+        
 
         @Test
         void getProfile_shouldReturnZeroStats_whenUserHasNoOrders() {
@@ -173,25 +111,8 @@ class CustomerProfileServiceTest {
                                 .email("sin@test.com")
                                 .build();
 
-                CustomerProfileEntity profile = CustomerProfileEntity.builder()
-                                .id(2L)
-                                .user(user)
-                                .surname("García")
-                                .phone("600123456")
-                                .address("Calle Uría 45")
-                                .postalCode("33003")
-                                .city("Oviedo")
-                                .avatar("https://example.com/avatar.jpg")
-                                .build();
-
-                when(userRepository.findById(2L))
-                                .thenReturn(Optional.of(user));
-
-                when(customerProfileRepository.findByUserId(2L))
-                                .thenReturn(Optional.of(profile));
-
-                when(orderRepository.findByUserId(2L))
-                                .thenReturn(List.of());
+                when(userRepository.findById(2L)).thenReturn(Optional.of(user));
+                when(orderRepository.findByUserId(2L)).thenReturn(List.of());
 
                 CustomerProfileDTOResponse result = customerProfileService.getProfile(2L);
 

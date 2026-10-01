@@ -3,9 +3,11 @@ package factoriaf5.team2.goxu.orders;
 import factoriaf5.team2.goxu.orders.dtos.OrderDTORequest;
 import factoriaf5.team2.goxu.orders.dtos.OrderDTOResponse;
 import factoriaf5.team2.goxu.orders.dtos.OrderItemDTORequest;
+import factoriaf5.team2.goxu.orders.dtos.OrderStatusHistoryDTOResponse;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -91,6 +93,21 @@ class OrderControllerTest {
 
         assertEquals(200, response.getStatusCode().value());
         assertEquals(expected, response.getBody());
+    }
+
+    @Test
+    void getTracking_returns200WithHistory_whenOrderExists() {
+        List<OrderStatusHistoryDTOResponse> history = List.of(
+                OrderStatusHistoryDTOResponse.builder()
+                        .status(OrderStatus.IN_KITCHEN)
+                        .changedAt(LocalDateTime.now())
+                        .build());
+        when(service.getTracking(1L)).thenReturn(history);
+
+        ResponseEntity<List<OrderStatusHistoryDTOResponse>> response = controller.getTracking(1L);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(history, response.getBody());
     }
 
     @Test

@@ -1,6 +1,5 @@
 package factoriaf5.team2.goxu.register;
 
-import factoriaf5.team2.goxu.profile.CustomerProfileEntity;
 import factoriaf5.team2.goxu.profile.CustomerProfileRepository;
 import factoriaf5.team2.goxu.register.dtos.RegisterDTORequest;
 import factoriaf5.team2.goxu.register.dtos.RegisterDTOResponse;
@@ -10,6 +9,7 @@ import factoriaf5.team2.goxu.users.UserRepository;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -28,59 +28,54 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class RegisterServiceTest {
 
-    @Mock
-    private UserRepository userRepository;
+        @Mock
+        private UserRepository userRepository;
 
-    @Mock
-    private PasswordEncoder passwordEncoder;
+        @Mock
+        private PasswordEncoder passwordEncoder;
 
-    @Mock
-    private RoleService roleService;
+        @Mock
+        private RoleService roleService;
 
-    @Mock
-    private CustomerProfileRepository customerProfileRepository;
+        @Mock
+        private CustomerProfileRepository customerProfileRepository;
 
-    @InjectMocks
-    private RegisterService registerService;
+        @InjectMocks
+        private RegisterService registerService;
 
-    @Test
-    // Comprueba que al registrar un usuario se crea también su perfil.
-    void registerUser_createsCustomerProfile() {
+        @Test
+        // Comprueba que al registrar un usuario se crea también su perfil.
+        void registerUser_createsCustomerProfile() {
 
-        RegisterDTORequest dto = new RegisterDTORequest(
-                "Juan",
-                "juan@goxu.com",
-                "password123",
-                "password123"
-        );
+                RegisterDTORequest dto = new RegisterDTORequest(
+                                "Juan",
+                                "juan@goxu.com",
+                                "password123",
+                                "password123");
 
-        UserEntity savedUser = UserEntity.builder()
-                .id(1L)
-                .name("Juan")
-                .email("juan@goxu.com")
-                .build();
+                UserEntity savedUser = UserEntity.builder()
+                                .id(1L)
+                                .name("Juan")
+                                .email("juan@goxu.com")
+                                .build();
+                when(userRepository.findAll(
+                                ArgumentMatchers.<Example<UserEntity>>any()))
+                                .thenReturn(List.of());
 
-        when(userRepository.findAll(any(Example.class)))
-                .thenReturn(List.of());
+                when(passwordEncoder.encode(dto.password()))
+                                .thenReturn("encoded-password");
 
-        when(passwordEncoder.encode(dto.password()))
-                .thenReturn("encoded-password");
+                when(roleService.assignDefaultRole())
+                                .thenReturn(Set.of());
 
-        when(roleService.assignDefaultRole())
-                .thenReturn(Set.of());
+                when(userRepository.save(any(UserEntity.class)))
+                                .thenReturn(savedUser);
 
-        when(userRepository.save(any(UserEntity.class)))
-                .thenReturn(savedUser);
+                RegisterDTOResponse response = registerService.registerUser(dto);
 
-        RegisterDTOResponse response =
-                registerService.registerUser(dto);
+                assertNotNull(response);
 
-        assertNotNull(response);
-
-        verify(customerProfileRepository).save(
-                argThat(profile ->
-                        profile.getUser().equals(savedUser)
-                )
-        );
-    }
+                verify(customerProfileRepository).save(
+                                argThat(profile -> profile.getUser().equals(savedUser)));
+        }
 }

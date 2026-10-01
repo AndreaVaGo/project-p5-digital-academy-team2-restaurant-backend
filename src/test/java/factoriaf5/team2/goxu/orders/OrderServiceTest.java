@@ -14,6 +14,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -23,6 +24,7 @@ import factoriaf5.team2.goxu.orders.dtos.OrderDTORequest;
 import factoriaf5.team2.goxu.orders.dtos.OrderDTOResponse;
 import factoriaf5.team2.goxu.orders.dtos.OrderItemDTORequest;
 import factoriaf5.team2.goxu.orders.dtos.OrderItemDTOResponse;
+import factoriaf5.team2.goxu.orders.dtos.OrderStatusHistoryDTOResponse;
 import factoriaf5.team2.goxu.products.ProductEntity;
 import factoriaf5.team2.goxu.products.ProductRepository;
 import factoriaf5.team2.goxu.users.UserEntity;
@@ -42,6 +44,12 @@ class OrderServiceTest {
 
     @Mock
     private OrderMapper orderMapper;
+
+    @Mock
+    private OrderNotificationService notificationService;
+
+    @Mock
+    private OrderStatusHistoryRepository historyRepository;
 
     @InjectMocks
     private OrderService orderService;
@@ -142,6 +150,38 @@ class OrderServiceTest {
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Pedido no encontrado con id 99");
     }
+    
+    @Test
+    void getTracking_shouldReturnHistoryOrderedByChangedAt_whenOrderExists() {
+        OrderStatusHistoryEntity historyEntry = OrderStatusHistoryEntity.builder()
+                .order(order)
+                .status(OrderStatus.IN_KITCHEN)
+                .changedAt(LocalDateTime.now())
+                .build();
+
+        OrderStatusHistoryDTOResponse historyResponse = OrderStatusHistoryDTOResponse.builder()
+                .status(OrderStatus.IN_KITCHEN)
+                .changedAt(historyEntry.getChangedAt())
+                .build();
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(historyRepository.findByOrderIdOrderByChangedAtAsc(1L)).thenReturn(List.of(historyEntry));
+        when(orderMapper.toResponse(historyEntry)).thenReturn(historyResponse);
+
+        List<OrderStatusHistoryDTOResponse> result = orderService.getTracking(1L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getStatus()).isEqualTo(OrderStatus.IN_KITCHEN);
+    }
+
+    @Test
+    void getTracking_shouldThrowNotFound_whenOrderDoesNotExist() {
+        when(orderRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> orderService.getTracking(99L))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Pedido no encontrado con id 99");
+    }
 
     @Test
     void create_shouldSaveOrderWithCalculatedTotal() {
@@ -203,6 +243,45 @@ class OrderServiceTest {
     }
 
     @Test
+    void updateStatus_shouldSendOnTheWayNotification_whenStatusChangesToOnTheWay() {
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(order)).thenReturn(order);
+        when(orderMapper.toResponse(order)).thenReturn(orderResponse);
+
+        orderService.updateStatus(1L, OrderStatus.ON_THE_WAY);
+
+        verify(notificationService).sendOrderOnTheWay(order);
+    }
+
+    @Test
+    void updateStatus_shouldSendDeliveredNotification_whenStatusChangesToDelivered() {
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(order)).thenReturn(order);
+        when(orderMapper.toResponse(order)).thenReturn(orderResponse);
+
+        orderService.updateStatus(1L, OrderStatus.DELIVERED);
+
+        verify(notificationService).sendOrderDelivered(order);
+    }
+
+    @Test
+    void updateStatus_shouldSaveStatusHistoryEntry_wheneverStatusChanges() {
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(order)).thenReturn(order);
+        when(orderMapper.toResponse(order)).thenReturn(orderResponse);
+
+        orderService.updateStatus(1L, OrderStatus.IN_KITCHEN);
+
+        ArgumentCaptor<OrderStatusHistoryEntity> captor = ArgumentCaptor.forClass(OrderStatusHistoryEntity.class);
+        verify(historyRepository).save(captor.capture());
+
+        OrderStatusHistoryEntity savedHistory = captor.getValue();
+        assertThat(savedHistory.getOrder()).isEqualTo(order);
+        assertThat(savedHistory.getStatus()).isEqualTo(OrderStatus.IN_KITCHEN);
+        assertThat(savedHistory.getChangedAt()).isNotNull();
+    }
+
+    @Test
     void updateStatus_shouldChangeStatus_whenOrderExists() {
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
         when(orderRepository.save(order)).thenReturn(order);
@@ -214,7 +293,6 @@ class OrderServiceTest {
         assertThat(order.getStatus()).isEqualTo(OrderStatus.DELIVERED);
     }
 
-    
     @Test
     void updateStatus_shouldChangeStatus_whenOrderExistsAndIsDelayed() {
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));

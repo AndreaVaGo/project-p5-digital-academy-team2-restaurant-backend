@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import factoriaf5.team2.goxu.orders.dtos.OrderDTOResponse;
 import factoriaf5.team2.goxu.orders.dtos.OrderItemDTORequest;
 import factoriaf5.team2.goxu.orders.dtos.OrderItemDTOResponse;
+import factoriaf5.team2.goxu.orders.dtos.OrderStatusHistoryDTOResponse;
 import factoriaf5.team2.goxu.products.ProductEntity;
 
 @Component
@@ -49,6 +50,13 @@ public class OrderMapper {
                 .total(entity.getTotal())
                 .createdAt(entity.getCreatedAt())
                 .items(itemResponses)
+                .build();
+    }
+
+    public OrderStatusHistoryDTOResponse toResponse(OrderStatusHistoryEntity entity) {
+        return OrderStatusHistoryDTOResponse.builder()
+                .status(entity.getStatus())
+                .changedAt(entity.getChangedAt())
                 .build();
     }
 
