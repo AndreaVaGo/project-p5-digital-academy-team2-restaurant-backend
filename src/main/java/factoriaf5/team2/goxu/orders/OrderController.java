@@ -19,7 +19,6 @@ import factoriaf5.team2.goxu.orders.dtos.OrderDTOResponse;
 import factoriaf5.team2.goxu.orders.dtos.OrderStatusHistoryDTOResponse;
 import factoriaf5.team2.goxu.payments.dtos.PaymentDTORequest;
 import jakarta.validation.Valid;
-import factoriaf5.team2.goxu.payments.dtos.PaymentDTORequest;
 
 @RestController
 @RequestMapping(path = "${api-endpoint}/orders")
