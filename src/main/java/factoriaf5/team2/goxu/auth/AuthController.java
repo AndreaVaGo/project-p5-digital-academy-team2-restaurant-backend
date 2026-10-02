@@ -35,21 +35,22 @@ public class AuthController {
     }
 
     // Flujo II: solo responde con un token válido y devuelve quién eres.
-@GetMapping("/me")
-public ResponseEntity<Map<String, Object>> me(Authentication authentication) {
-    Optional<UserEntity> user = userRepository.findByEmail(authentication.getName());
+    @GetMapping("/me")
+    public ResponseEntity<Map<String, Object>> me(Authentication authentication) {
+        Optional<UserEntity> user = userRepository.findByEmail(authentication.getName());
 
-    if (user.isEmpty()) {
-        return ResponseEntity.notFound().build();
+        if (user.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        UserEntity currentUser = user.get();
+
+        return ResponseEntity.ok(Map.of(
+                "id", currentUser.getId(),
+                "name", currentUser.getName(),
+                "email", currentUser.getEmail(),
+                "roles", currentUser.getRoles().stream()
+                        .map(role -> role.getName().name())
+                        .toList()));
     }
-
-    UserEntity currentUser = user.get();
-
-    return ResponseEntity.ok(Map.of(
-            "id", currentUser.getId(),
-            "name", currentUser.getName(),
-            "email", currentUser.getEmail()
-    ));
 }
-}
-
