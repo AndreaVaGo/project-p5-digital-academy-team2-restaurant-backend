@@ -30,6 +30,9 @@ import factoriaf5.team2.goxu.products.ProductRepository;
 import factoriaf5.team2.goxu.users.UserEntity;
 import factoriaf5.team2.goxu.users.UserRepository;
 
+import factoriaf5.team2.goxu.payments.PaymentService;
+import factoriaf5.team2.goxu.payments.dtos.PaymentDTORequest;
+
 @ExtendWith(MockitoExtension.class)
 class OrderServiceTest {
 
@@ -50,6 +53,9 @@ class OrderServiceTest {
 
     @Mock
     private OrderStatusHistoryRepository historyRepository;
+
+    @Mock
+    private PaymentService paymentService;
 
     @InjectMocks
     private OrderService orderService;
@@ -316,21 +322,26 @@ class OrderServiceTest {
 
     @Test
     void markAsPaid_shouldSetPaidTrue_whenOrderExists() {
+        PaymentDTORequest paymentDto = new PaymentDTORequest("4111111111111111", "Andrea", "12/28", "123");
+
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
         when(orderRepository.save(order)).thenReturn(order);
         when(orderMapper.toResponse(order)).thenReturn(orderResponse);
 
-        OrderDTOResponse result = orderService.markAsPaid(1L);
+        OrderDTOResponse result = orderService.markAsPaid(1L, paymentDto);
 
         assertThat(result).isNotNull();
         assertThat(order.isPaid()).isTrue();
+        verify(paymentService).pay(order, paymentDto);
     }
 
     @Test
     void markAsPaid_shouldThrowNotFound_whenOrderDoesNotExist() {
+        PaymentDTORequest paymentDto = new PaymentDTORequest("4111111111111111", "Andrea", "12/28", "123");
+
         when(orderRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> orderService.markAsPaid(99L))
+        assertThatThrownBy(() -> orderService.markAsPaid(99L, paymentDto))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Pedido no encontrado con id 99");
     }
