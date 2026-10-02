@@ -4,6 +4,7 @@ import factoriaf5.team2.goxu.orders.dtos.OrderDTORequest;
 import factoriaf5.team2.goxu.orders.dtos.OrderDTOResponse;
 import factoriaf5.team2.goxu.orders.dtos.OrderItemDTORequest;
 import factoriaf5.team2.goxu.orders.dtos.OrderStatusHistoryDTOResponse;
+import factoriaf5.team2.goxu.payments.dtos.PaymentDTORequest;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -132,10 +133,11 @@ class OrderControllerTest {
 
     @Test
     void markAsPaid_returns200WithPaidOrder_whenOrderExists() {
+        PaymentDTORequest paymentDto = new PaymentDTORequest("4111111111111111", "Andrea", "12/28", "123");
         OrderDTOResponse expected = buildResponse(1L, OrderStatus.PENDING);
-        when(service.markAsPaid(1L)).thenReturn(expected);
+        when(service.markAsPaid(1L, paymentDto)).thenReturn(expected);
 
-        ResponseEntity<OrderDTOResponse> response = controller.markAsPaid(1L);
+        ResponseEntity<OrderDTOResponse> response = controller.markAsPaid(1L, paymentDto);
 
         assertEquals(200, response.getStatusCode().value());
         assertEquals(expected, response.getBody());
