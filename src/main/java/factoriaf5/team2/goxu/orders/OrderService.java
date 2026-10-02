@@ -12,6 +12,8 @@ import factoriaf5.team2.goxu.orders.dtos.OrderDTORequest;
 import factoriaf5.team2.goxu.orders.dtos.OrderDTOResponse;
 import factoriaf5.team2.goxu.orders.dtos.OrderItemDTORequest;
 import factoriaf5.team2.goxu.orders.dtos.OrderStatusHistoryDTOResponse;
+import factoriaf5.team2.goxu.payments.PaymentService;
+import factoriaf5.team2.goxu.payments.dtos.PaymentDTORequest;
 import factoriaf5.team2.goxu.products.ProductEntity;
 import factoriaf5.team2.goxu.products.ProductRepository;
 import factoriaf5.team2.goxu.users.UserEntity;
@@ -29,6 +31,7 @@ public class OrderService {
     private final OrderMapper orderMapper;
     private final OrderNotificationService notificationService;
     private final OrderStatusHistoryRepository historyRepository;
+    private final PaymentService paymentService;
 
     public List<OrderDTOResponse> getAll() {
         return orderRepository.findAll()
@@ -117,8 +120,9 @@ public class OrderService {
         return orderMapper.toResponse(updated);
     }
 
-    public OrderDTOResponse markAsPaid(Long id) {
+    public OrderDTOResponse markAsPaid(Long id, PaymentDTORequest paymentDto) {
         OrderEntity order = findOrderOrThrow(id);
+        paymentService.pay(order, paymentDto);
         order.setPaid(true);
         OrderEntity updated = orderRepository.save(order);
         return orderMapper.toResponse(updated);

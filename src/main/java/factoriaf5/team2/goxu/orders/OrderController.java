@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import factoriaf5.team2.goxu.orders.dtos.OrderDTORequest;
 import factoriaf5.team2.goxu.orders.dtos.OrderDTOResponse;
 import factoriaf5.team2.goxu.orders.dtos.OrderStatusHistoryDTOResponse;
-
+import factoriaf5.team2.goxu.payments.dtos.PaymentDTORequest;
 import jakarta.validation.Valid;
 
 @RestController
@@ -72,8 +72,11 @@ public class OrderController {
     }
 
     @PutMapping("/{id}/pay")
-    public ResponseEntity<OrderDTOResponse> markAsPaid(@PathVariable Long id) {
-        OrderDTOResponse response = service.markAsPaid(id);
+    public ResponseEntity<OrderDTOResponse> markAsPaid(
+            @PathVariable Long id,
+            @Valid @RequestBody PaymentDTORequest paymentDto) {
+
+        OrderDTOResponse response = service.markAsPaid(id, paymentDto);
         return ResponseEntity.ok(response);
     }
 
