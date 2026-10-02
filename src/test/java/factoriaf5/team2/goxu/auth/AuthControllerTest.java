@@ -24,6 +24,11 @@ import factoriaf5.team2.goxu.users.UserEntity;
 import factoriaf5.team2.goxu.users.UserRepository;
 
 import java.util.Optional;
+import java.util.List;
+import java.util.Set;
+
+import factoriaf5.team2.goxu.roles.RoleEntity;
+import factoriaf5.team2.goxu.roles.RoleName;
 
 @ExtendWith(MockitoExtension.class)
 class AuthControllerTest {
@@ -62,28 +67,33 @@ class AuthControllerTest {
         verifyNoMoreInteractions(tokenService);
     }
 
-@Test
-void me_returnsAuthenticatedUserData() {
+    @Test
+    void me_returnsAuthenticatedUserData() {
 
-    UserEntity user = UserEntity.builder()
-            .id(1L)
-            .name("Juan")
-            .email("juan@authentication.com")
-            .build();
+        RoleEntity role = new RoleEntity();
+        role.setName(RoleName.CUSTOMER);
 
-    when(authentication.getName()).thenReturn("juan@authentication.com");
-    when(userRepository.findByEmail("juan@authentication.com"))
-            .thenReturn(Optional.of(user));
+        UserEntity user = UserEntity.builder()
+                .id(1L)
+                .name("Juan")
+                .email("juan@authentication.com")
+                .roles(Set.of(role))
+                .build();
+        when(authentication.getName()).thenReturn("juan@authentication.com");
+        when(userRepository.findByEmail("juan@authentication.com"))
+                .thenReturn(Optional.of(user));
 
-    ResponseEntity<Map<String, Object>> response = authController.me(authentication);
+        ResponseEntity<Map<String, Object>> response = authController.me(authentication);
 
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertNotNull(response.getBody());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
 
-    assertEquals(1L, response.getBody().get("id"));
-    assertEquals("Juan", response.getBody().get("name"));
-    assertEquals("juan@authentication.com", response.getBody().get("email"));
-}
+        assertEquals(1L, response.getBody().get("id"));
+        assertEquals("Juan", response.getBody().get("name"));
+        assertEquals("juan@authentication.com", response.getBody().get("email"));
+        assertEquals(List.of("CUSTOMER"), response.getBody().get("roles"));
+    }
+
     @Test // Comprueba que no devuelva tokens, porque no le corresponde (/me)
     void me_doesNotIssueTokens() {
         when(authentication.getName()).thenReturn("juan@authentication.com");

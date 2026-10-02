@@ -1,11 +1,10 @@
-package factoriaf5.users;
+package factoriaf5.team2.goxu.users;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import factoriaf5.team2.goxu.roles.RoleEntity;
-import factoriaf5.team2.goxu.users.UserEntity;
 
 class UserEntityTest {
 

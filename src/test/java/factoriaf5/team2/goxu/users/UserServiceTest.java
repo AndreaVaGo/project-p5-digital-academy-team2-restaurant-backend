@@ -1,4 +1,4 @@
-package factoriaf5.users;
+package factoriaf5.team2.goxu.users;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.verify;
@@ -9,9 +9,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import factoriaf5.team2.goxu.users.UserEntity;
-import factoriaf5.team2.goxu.users.UserRepository;
-import factoriaf5.team2.goxu.users.UserService;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
