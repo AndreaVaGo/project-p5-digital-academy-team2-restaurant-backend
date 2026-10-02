@@ -86,7 +86,13 @@ class CustomerProfileServiceTest {
                                 .items(List.of())
                                 .build();
 
+                CustomerProfileEntity profile = CustomerProfileEntity.builder()
+                                .id(1L)
+                                .user(user)
+                                .build();
+
                 when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+                when(customerProfileRepository.findByUserId(1L)).thenReturn(Optional.of(profile));
                 when(orderRepository.findByUserId(1L)).thenReturn(List.of(order));
                 when(orderMapper.toResponse(order)).thenReturn(orderResponse);
 
@@ -101,8 +107,6 @@ class CustomerProfileServiceTest {
                 assertThat(result.getRecentOrders()).hasSize(1);
         }
 
-        
-
         @Test
         void getProfile_shouldReturnZeroStats_whenUserHasNoOrders() {
                 UserEntity user = UserEntity.builder()
@@ -111,7 +115,13 @@ class CustomerProfileServiceTest {
                                 .email("sin@test.com")
                                 .build();
 
+                CustomerProfileEntity profile = CustomerProfileEntity.builder()
+                                .id(2L)
+                                .user(user)
+                                .build();
+
                 when(userRepository.findById(2L)).thenReturn(Optional.of(user));
+                when(customerProfileRepository.findByUserId(2L)).thenReturn(Optional.of(profile));
                 when(orderRepository.findByUserId(2L)).thenReturn(List.of());
 
                 CustomerProfileDTOResponse result = customerProfileService.getProfile(2L);
